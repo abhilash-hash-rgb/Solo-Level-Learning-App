@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Professor Dashboard - Student Progress</title>
+
+  <!-- Google Font: Bodoni Moda -->
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Chart.js for graphs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Bodoni Moda', serif;
+      background-image: url('Login_page_bg.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      backdrop-filter: blur(2px);
+      overflow-x: hidden;
+    }
+
+    .glass {
+      background: rgba(10, 10, 20, 0.85);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .glow-text {
+      text-shadow: 0 0 8px #818cf8;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 9999px;
+      border: 2px solid #818cf8;
+      box-shadow: 0 0 15px #6366f1;
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .modal-content {
+      background: rgba(30, 41, 59, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+    }
+
+    .close-modal {
+      background: rgba(99, 102, 241, 0.8);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .close-modal:hover {
+      background: rgba(129, 140, 248, 0.9);
+    }
+
+    /* Student Progress Styles */
+    .progress-container {
+      height: 400px;
+      position: relative;
+    }
+
+    .student-card {
+      border-left: 4px solid;
+      transition: transform 0.2s ease;
+    }
+
+    .student-card:hover {
+      transform: translateX(5px);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Student Search Input */
+    .search-input {
+      background: rgba(255, 255, 255, 0.9);
+      color: #1e293b;
+      padding: 10px 15px;
+      border: 2px solid #818cf8;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+      max-width: 300px;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.8);
+    }
+
+    /* View Tabs */
+    .view-tab {
+      padding: 10px 20px;
+      border-radius: 8px 8px 0 0;
+      background: rgba(30, 41, 59, 0.5);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .view-tab.active {
+      background: rgba(79, 70, 229, 0.6);
+      font-weight: bold;
+    }
+
+    /* Progress Details */
+    .progress-details {
+      display: none;
+    }
+
+    .progress-details.show {
+      display: block;
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-64 p-6 glass hidden md:block">
+    <h2 class="text-2xl font-bold glow-text mb-8">Professor Panel</h2>
+    <nav class="space-y-4">
+      <a href="prof_dashboard.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Dashboard</a>
+      <a href="manage_course.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Manage Courses</a>
+      <a href="#" class="block py-2 px-4 rounded hover:bg-indigo-600 bg-indigo-500" onclick="showStudentProgress()">View Student Progress</a>
+      <a href="assignments.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Assignments</a>
+      <a href="settings_prof.html" class="block py-2 px-4 rounded hover:bg-indigo-600" onclick="showSettings()">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6" id="mainContent">
+    <!-- Top bar -->
+    <div class="glass rounded-xl p-4 mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold glow-text">Student Progress</h1>
+        <p class="text-indigo-300 text-sm">Track performance across assignments</p>
+      </div>
+      <div class="flex items-center space-x-4">
+        <img src="prof_img.png" alt="Avatar" class="avatar">
+        <a href="Login 3.html" class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600 inline-block">Logout</a>
+      </div>
+    </div>
+
+    <!-- Student Progress Section -->
+    <div class="glass rounded-xl p-6">
+      <!-- Controls and Filters -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div>
+          <h2 class="text-xl font-bold glow-text mb-2">Performance Analytics</h2>
+          <p class="text-indigo-300 text-sm mb-4 md:mb-0">Viewing data for current semester</p>
+        </div>
+        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+          <select id="courseFilter" class="search-input">
+            <option value="all">All Courses</option>
+            <option value="cs101">CS101: Intro to Programming</option>
+            <option value="cs201">CS201: Data Structures</option>
+            <option value="cs301">CS301: Algorithms</option>
+            <option value="cs401">CS401: Advanced Programming</option>
+          </select>
+          <input type="text" placeholder="Search student..." class="search-input" id="studentSearch">
+        </div>
+      </div>
+
+      <!-- View Tabs -->
+      <div class="flex mb-4 border-b border-indigo-900">
+        <div class="view-tab active" data-tab="overview">Overview</div>
+        <div class="view-tab" data-tab="individual">Individual Progress</div>
+        <div class="view-tab" data-tab="comparison">Compare Students</div>
+      </div>
+
+      <!-- Overview Tab Content -->
+      <div id="overviewTab" class="progress-details show">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div class="card p-4 rounded-xl">
+            <h3 class="text-lg font-semibold">Class Average</h3>
+            <p class="text-3xl font-bold text-indigo-400">86%</p>
+          </div>
+          <div class="card p-4 rounded-xl">
+            <h3 class="text-lg font-semibold">Highest Score</h3>
+            <p class="text-3xl font-bold text-indigo-400">98%</p>
+          </div>
+          <div class="card p-4 rounded-xl">
+            <h3 class="text-lg font-semibold">Lowest Score</h3>
+            <p class="text-3xl font-bold text-indigo-400">68%</p>
+          </div>
+          <div class="card p-4 rounded-xl">
+            <h3 class="text-lg font-semibold">At Risk Students</h3>
+            <p class="text-3xl font-bold text-indigo-400">4</p>
+          </div>
+        </div>
+
+        <div class="card p-4 rounded-xl mb-6">
+          <h3 class="text-lg font-semibold mb-4">Class Performance Trend</h3>
+          <div class="progress-container">
+            <canvas id="classProgressChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Individual Progress Tab Content -->
+      <div id="individualTab" class="progress-details">
+        <div class="flex flex-col md:flex-row gap-6">
+          <!-- Student List -->
+          <div class="card p-4 rounded-xl w-full md:w-1/3">
+            <h3 class="text-lg font-semibold mb-4">Students</h3>
+            <div class="space-y-3 max-h-96 overflow-y-auto" id="studentList">
+              <!-- Student cards will be added here by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Student Details -->
+          <div class="card p-4 rounded-xl w-full md:w-2/3">
+            <h3 class="text-lg font-semibold mb-2" id="selectedStudentName">Select a student</h3>
+            <p class="text-indigo-300 text-sm mb-4" id="selectedStudentInfo"></p>
+            <div class="progress-container">
+              <canvas id="studentProgressChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison Tab Content -->
+      <div id="comparisonTab" class="progress-details">
+        <div class="card p-4 rounded-xl mb-6">
+          <h3 class="text-lg font-semibold mb-4">Compare Students</h3>
+          <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-6">
+            <select id="student1" class="search-input">
+              <option value="" disabled selected>Select first student</option>
+              <!-- Options will be added by JavaScript -->
+            </select>
+            <select id="student2" class="search-input">
+              <option value="" disabled selected>Select second student</option>
+              <!-- Options will be added by JavaScript -->
+            </select>
+            <button id="compareButton" class="bg-indigo-500 px-4 py-2 rounded-lg hover:bg-indigo-600">Compare</button>
+          </div>
+          <div class="progress-container">
+            <canvas id="compareChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-2xl font-bold glow-text mb-4">Settings</h2>
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-lg">Sound Effects:</span>
+        <input type="checkbox" id="soundToggle" class="toggle-checkbox" />
+      </div>
+      <button class="close-modal mt-4" onclick="closeSettings()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // Sample student data
+    const students = [
+      { id: 1, name: "Alex Johnson", averageScore: 92, grades: [95, 88, 94, 91, 92], email: "alex.j@university.edu", courseId: "cs101" },
+      { id: 2, name: "Jamie Smith", averageScore: 85, grades: [82, 85, 88, 84, 86], email: "jamie.s@university.edu", courseId: "cs101" },
+      { id: 3, name: "Casey Brown", averageScore: 78, grades: [75, 72, 80, 82, 81], email: "casey.b@university.edu", courseId: "cs201" },
+      { id: 4, name: "Taylor Wilson", averageScore: 94, grades: [98, 92, 95, 93, 92], email: "taylor.w@university.edu", courseId: "cs201" },
+      { id: 5, name: "Morgan Lee", averageScore: 88, grades: [85, 90, 87, 92, 86], email: "morgan.l@university.edu", courseId: "cs301" },
+      { id: 6, name: "Riley Davis", averageScore: 72, grades: [68, 75, 70, 74, 73], email: "riley.d@university.edu", courseId: "cs301" },
+      { id: 7, name: "Jordan Kim", averageScore: 90, grades: [89, 92, 88, 91, 90], email: "jordan.k@university.edu", courseId: "cs401" },
+      { id: 8, name: "Quinn Garcia", averageScore: 81, grades: [78, 82, 80, 85, 80], email: "quinn.g@university.edu", courseId: "cs401" }
+    ];
+
+    // Assignment labels
+    const assignmentLabels = ["Assignment 1", "Assignment 2", "Assignment 3", "Assignment 4", "Assignment 5"];
+
+    // Tab navigation
+    document.querySelectorAll('.view-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Remove active class from all tabs
+        document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+        // Add active class to clicked tab
+        this.classList.add('active');
+        
+        // Hide all tab contents
+        document.querySelectorAll('.progress-details').forEach(content => content.classList.remove('show'));
+        // Show the corresponding tab content
+        document.getElementById(this.dataset.tab + 'Tab').classList.add('show');
+      });
+    });
+
+    // Function to initialize the class progress chart
+    function initializeClassProgressChart() {
+      const ctx = document.getElementById('classProgressChart').getContext('2d');
+      
+      // Calculate class averages for each assignment
+      const classAverages = assignmentLabels.map((_, index) => {
+        const sum = students.reduce((total, student) => total + student.grades[index], 0);
+        return (sum / students.length).toFixed(1);
+      });
+      
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: assignmentLabels,
+          datasets: [{
+            label: 'Class Average',
+            data: classAverages,
+            borderColor: '#818cf8',
+            backgroundColor: 'rgba(129, 140, 248, 0.2)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#ffffff'
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 60,
+              max: 100,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#ffffff'
+              }
+            },
+            x: {
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#ffffff'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Function to populate student list
+    function populateStudentList() {
+      const studentList = document.getElementById('studentList');
+      studentList.innerHTML = '';
+      
+      students.forEach(student => {
+        const studentCard = document.createElement('div');
+        studentCard.className = 'student-card p-3 rounded-lg flex justify-between items-center';
+        studentCard.style.borderLeftColor = getColorForScore(student.averageScore);
+        studentCard.innerHTML = `
+          <div>
+            <h4 class="font-medium">${student.name}</h4>
+            <p class="text-xs text-indigo-300">${student.email}</p>
+          </div>
+          <div class="text-right">
+            <span class="text-lg font-bold" style="color: ${getColorForScore(student.averageScore)}">${student.averageScore}%</span>
+          </div>
+        `;
+        
+        studentCard.addEventListener('click', () => showStudentDetails(student));
+        studentList.appendChild(studentCard);
+      });
+
+      // Also populate the comparison dropdowns
+      const student1Select = document.getElementById('student1');
+      const student2Select = document.getElementById('student2');
+      
+      // Clear existing options (except the first)
+      student1Select.innerHTML = '<option value="" disabled selected>Select first student</option>';
+      student2Select.innerHTML = '<option value="" disabled selected>Select second student</option>';
+      
+      // Add student options
+      students.forEach(student => {
+        const option1 = document.createElement('option');
+        option1.value = student.id;
+        option1.textContent = student.name;
+        student1Select.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = student.id;
+        option2.textContent = student.name;
+        student2Select.appendChild(option2);
+      });
+    }
+
+    // Function to show student details and chart
+    function showStudentDetails(student) {
+      document.getElementById('selectedStudentName').textContent = student.name;
+      document.getElementById('selectedStudentInfo').textContent = `Email: ${student.email} | Average: ${student.averageScore}%`;
+      
+      // Create or update chart
+      const ctx = document.getElementById('studentProgressChart').getContext('2d');
+      
+      // Destroy previous chart if exists
+      if (window.studentChart) {
+        window.studentChart.destroy();
+      }
+      
+      window.studentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: assignmentLabels,
+          datasets: [{
+            label: 'Student Progress',
+            data: student.grades,
+            borderColor: getColorForScore(student.averageScore),
+            backgroundColor: `${getColorForScore(student.averageScore)}33`,
+            borderWidth: 3,
+            tension: 0.3,
+            fill: true
+          }, {
+            label: 'Class Average',
+            data: assignmentLabels.map((_, index) => {
+              const sum = students.reduce((total, s) => total + s.grades[index], 0);
+              return (sum / students.length).toFixed(1);
+            }),
+            borderColor: '#818cf8',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            tension: 0.3,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#ffffff'
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 60,
+              max: 100,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#ffffff'
+              }
+            },
+            x: {
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#ffffff'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Function to compare two students
+    document.getElementById('compareButton').addEventListener('click', function() {
+      const student1Id = parseInt(document.getElementById('student1').value);
+      const student2Id = parseInt(document.getElementById('student2').value);
+      
+      if (isNaN(student1Id) || isNaN(student2Id)) {
+        alert('Please select two students to compare');
+        return;
+      }
+      
+      const student1 = students.find(s => s.id === student1Id);
+      const student2 = students.find(s => s.id === student2Id);
+      
+      if (!student1 || !student2) return;
+      
+      // Create or update comparison chart
+      const ctx = document.getElementById('compareChart').getContext('2d');
+      
+      // Destroy previous chart if exists
+      if (window.compareChart) {
+        window.compareChart.destroy();
+      }
+      
+      window.compareChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: assignmentLabels,
+          datasets: [{
+            label: student1.name,
+            data: student1.grades,
+            borderColor: '#818cf8',
+            backgroundColor: 'rgba(129, 140, 248, 0.2)',
+            borderWidth: 3,
+            tension: 0.3,
+            fill: false
+          }, {
+            label: student2.name,
+            data: student2.grades,
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+            borderWidth: 3,
+            tension: 0.3,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#ffffff'
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 60,
+              max: 100,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#ffffff'
+              }
+            },
+            x: {
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#ffffff'
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // Function to filter students by search
+    document.getElementById('studentSearch').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const studentList = document.getElementById('studentList');
+      
+      Array.from(studentList.children).forEach(card => {
+        const studentName = card.querySelector('h4').textContent.toLowerCase();
+        const studentEmail = card.querySelector('p').textContent.toLowerCase();
+        
+        if (studentName.includes(searchTerm) || studentEmail.includes(searchTerm)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+
+    // Function to filter students by course
+    document.getElementById('courseFilter').addEventListener('change', function(e) {
+      const courseId = e.target.value;
+      const studentList = document.getElementById('studentList');
+      
+      Array.from(studentList.children).forEach((card, index) => {
+        if (courseId === 'all' || students[index].courseId === courseId) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+
+    // Function to get color based on score
+    function getColorForScore(score) {
+      if (score >= 90) return '#34d399'; // green
+      if (score >= 80) return '#60a5fa'; // blue
+      if (score >= 70) return '#f59e0b'; // yellow
+      return '#ef4444'; // red
+    }
+
+    // Function to show the settings modal
+    function showSettings() {
+      const modal = document.getElementById("settingsModal");
+      modal.classList.add("show");
+    }
+
+    // Function to close the settings modal
+    function closeSettings() {
+      const modal = document.getElementById("settingsModal");
+      modal.classList.remove("show");
+    }
+
+    // Show student progress content
+    function showStudentProgress() {
+      // This function would normally handle navigation, but we're already on this page
+      console.log("Student progress view is already active");
+    }
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeClassProgressChart();
+      populateStudentList();
+      
+      // Show first student by default in individual tab
+      if (students.length > 0) {
+        showStudentDetails(students[0]);
+      }
+    });
+  </script>
+</body>
+</html>

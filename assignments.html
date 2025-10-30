@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Professor Dashboard - Assignments</title>
+
+  <!-- Google Font: Bodoni Moda -->
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Bodoni Moda', serif;
+      background-image: url('Login_page_bg.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      backdrop-filter: blur(2px);
+      overflow-x: hidden;
+    }
+
+    .glass {
+      background: rgba(10, 10, 20, 0.85);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .glow-text {
+      text-shadow: 0 0 8px #818cf8;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 9999px;
+      border: 2px solid #818cf8;
+      box-shadow: 0 0 15px #6366f1;
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .modal-content {
+      background: rgba(30, 41, 59, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .close-modal {
+      background: rgba(99, 102, 241, 0.8);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .close-modal:hover {
+      background: rgba(129, 140, 248, 0.9);
+    }
+
+    /* File upload styling */
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .file-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: rgba(55, 65, 81, 0.5);
+      transition: background 0.2s;
+    }
+
+    .file-list-item:hover {
+      background: rgba(75, 85, 99, 0.6);
+    }
+
+    .tab-button {
+      padding: 10px 20px;
+      background: rgba(55, 65, 81, 0.5);
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab-button.active {
+      background: rgba(79, 70, 229, 0.6);
+      border-bottom: 2px solid #6366f1;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 20px 0;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Custom select styling */
+    .custom-select {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+      width: 100%;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: calc(100% - 12px) center;
+      background-size: 12px;
+    }
+
+    /* Badge styles */
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-pdf {
+      background-color: rgba(239, 68, 68, 0.7);
+    }
+
+    .badge-ppt {
+      background-color: rgba(245, 158, 11, 0.7);
+    }
+
+    .badge-assignment {
+      background-color: rgba(16, 185, 129, 0.7);
+    }
+
+    /* Due date input */
+    input[type="date"] {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+    }
+
+    /* File type icons */
+    .file-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      margin-right: 12px;
+    }
+
+    .file-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-64 p-6 glass hidden md:block">
+    <h2 class="text-2xl font-bold glow-text mb-8">Professor Panel</h2>
+    <nav class="space-y-4">
+      <a href="prof_dashboard.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Dashboard</a>
+      <a href="manage_course.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Manage Courses</a>
+      <a href="student_progress.html" class="block py-2 px-4 rounded hover:bg-indigo-600">View Student Progress</a>
+      <a href="#" class="block py-2 px-4 rounded bg-indigo-500 hover:bg-indigo-600">Assignments</a>
+      <a href="settings_prof.html" class="block py-2 px-4 rounded hover:bg-indigo-600" onclick="showSettings()">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <!-- Top bar -->
+    <div class="glass rounded-xl p-4 mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold glow-text">Assignments</h1>
+        <p class="text-indigo-300 text-sm">Manage your course assignments and materials</p>
+      </div>
+      <div class="flex items-center space-x-4">
+        <img src="prof_img.png" alt="Avatar" class="avatar">
+        <a href="Login 3.html" class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600 inline-block">Logout</a>
+      </div>
+    </div>
+
+    <!-- Assignments Content -->
+    <div class="glass rounded-xl p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold glow-text">Course Materials & Assignments</h2>
+        <button id="addNewAssignmentBtn" class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600" onclick="showNewAssignmentModal()">
+          + Add New
+        </button>
+      </div>
+
+      <!-- Course Select -->
+      <div class="mb-6">
+        <label for="courseSelect" class="block mb-2">Select Course</label>
+        <select id="courseSelect" class="custom-select" onchange="filterAssignmentsByCourse()">
+          <option value="all">All Courses</option>
+          <option value="cs101">CS101: Introduction to Programming</option>
+          <option value="cs202">CS202: Data Structures</option>
+          <option value="cs303">CS303: Database Systems</option>
+          <option value="cs404">CS404: Machine Learning</option>
+          <option value="cs505">CS505: Computer Networks</option>
+        </select>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="border-b border-gray-700 mb-4">
+        <div class="flex space-x-2">
+          <button class="tab-button active" data-tab="all">All Materials</button>
+          <button class="tab-button" data-tab="assignments">Assignments</button>
+          <button class="tab-button" data-tab="presentations">Presentations</button>
+          <button class="tab-button" data-tab="pdfs">PDF Documents</button>
+        </div>
+      </div>
+
+      <!-- Materials List -->
+      <div id="allMaterials" class="tab-content active">
+        <div id="fileList" class="space-y-3">
+          <!-- Example items - will be populated dynamically -->
+          <div class="file-list-item" data-course="cs101" data-type="assignment">
+            <div class="flex items-center">
+              <div class="file-icon bg-green-600 text-white">As</div>
+              <div>
+                <div class="file-name">Week 1 Programming Exercise</div>
+                <div class="text-xs text-gray-400">CS101 • Due: Apr 15, 2025</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="badge badge-assignment">Assignment</span>
+              <button class="text-indigo-400 hover:text-indigo-300" onclick="editAssignment(this)">Edit</button>
+              <button class="text-red-400 hover:text-red-300" onclick="deleteAssignment(this)">Delete</button>
+            </div>
+          </div>
+          
+          <div class="file-list-item" data-course="cs202" data-type="pdf">
+            <div class="flex items-center">
+              <div class="file-icon bg-red-600 text-white">PDF</div>
+              <div>
+                <div class="file-name">Data Structures Handbook</div>
+                <div class="text-xs text-gray-400">CS202 • Uploaded: Mar 28, 2025</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="badge badge-pdf">PDF</span>
+              <button class="text-indigo-400 hover:text-indigo-300" onclick="editAssignment(this)">Edit</button>
+              <button class="text-red-400 hover:text-red-300" onclick="deleteAssignment(this)">Delete</button>
+            </div>
+          </div>
+          
+          <div class="file-list-item" data-course="cs303" data-type="ppt">
+            <div class="flex items-center">
+              <div class="file-icon bg-yellow-600 text-white">PPT</div>
+              <div>
+                <div class="file-name">SQL Fundamentals Lecture Slides</div>
+                <div class="text-xs text-gray-400">CS303 • Uploaded: Apr 2, 2025</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="badge badge-ppt">PPT</span>
+              <button class="text-indigo-400 hover:text-indigo-300" onclick="editAssignment(this)">Edit</button>
+              <button class="text-red-400 hover:text-red-300" onclick="deleteAssignment(this)">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="assignmentsTab" class="tab-content">
+        <!-- Will be filtered to show only assignments -->
+      </div>
+      
+      <div id="presentationsTab" class="tab-content">
+        <!-- Will be filtered to show only presentations -->
+      </div>
+      
+      <div id="pdfsTab" class="tab-content">
+        <!-- Will be filtered to show only PDFs -->
+      </div>
+    </div>
+  </main>
+
+  <!-- New Assignment Modal -->
+  <div id="newAssignmentModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-2xl font-bold glow-text mb-6">Add New Material</h2>
+      
+      <form id="assignmentForm">
+        <div class="mb-4">
+          <label for="materialType" class="block mb-2">Material Type:</label>
+          <select id="materialType" class="custom-select" onchange="toggleDueDateField()">
+            <option value="assignment">Assignment</option>
+            <option value="ppt">Presentation (PPT)</option>
+            <option value="pdf">Document (PDF)</option>
+          </select>
+        </div>
+        
+        <div class="mb-4">
+          <label for="assignmentName" class="block mb-2">Name:</label>
+          <input type="text" id="assignmentName" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white" placeholder="Enter a descriptive name" required>
+        </div>
+        
+        <div class="mb-4">
+          <label for="courseName" class="block mb-2">Course:</label>
+          <select id="courseName" class="custom-select">
+            <option value="cs101">CS101: Introduction to Programming</option>
+            <option value="cs202">CS202: Data Structures</option>
+            <option value="cs303">CS303: Database Systems</option>
+            <option value="cs404">CS404: Machine Learning</option>
+            <option value="cs505">CS505: Computer Networks</option>
+          </select>
+        </div>
+        
+        <div id="dueDateContainer" class="mb-4">
+          <label for="dueDate" class="block mb-2">Due Date (for assignments):</label>
+          <input type="date" id="dueDate" class="w-full">
+        </div>
+        
+        <div class="mb-4">
+          <label for="fileDescription" class="block mb-2">Description (optional):</label>
+          <textarea id="fileDescription" class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white h-24" placeholder="Enter details about this material"></textarea>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block mb-2">Upload File:</label>
+          <div class="file-input-wrapper">
+            <button type="button" class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600 w-full">
+              Choose File
+            </button>
+            <input type="file" id="fileUpload" accept=".pdf,.ppt,.pptx,.doc,.docx,.txt">
+          </div>
+          <p id="selectedFileName" class="mt-2 text-sm text-gray-400">No file selected</p>
+        </div>
+        
+        <div class="flex justify-end space-x-4 mt-6">
+          <button type="button" class="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600" onclick="closeNewAssignmentModal()">Cancel</button>
+          <button type="submit" class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Edit Assignment Modal (similar structure, could be reused) -->
+  <div id="editAssignmentModal" class="modal">
+    <div class="modal-content">
+      <!-- Same form as new assignment but with pre-filled values -->
+    </div>
+  </div>
+
+  <script>
+    // Function to show the new assignment modal
+    function showNewAssignmentModal() {
+      const modal = document.getElementById("newAssignmentModal");
+      modal.classList.add("show");
+      
+      // Reset form
+      document.getElementById("assignmentForm").reset();
+      document.getElementById("selectedFileName").textContent = "No file selected";
+    }
+    
+    // Function to close the new assignment modal
+    function closeNewAssignmentModal() {
+      const modal = document.getElementById("newAssignmentModal");
+      modal.classList.remove("show");
+    }
+    
+    // Handle file selection display
+    document.getElementById("fileUpload").addEventListener("change", function() {
+      const fileName = this.files[0] ? this.files[0].name : "No file selected";
+      document.getElementById("selectedFileName").textContent = fileName;
+    });
+    
+    // Toggle due date field based on material type
+    function toggleDueDateField() {
+      const materialType = document.getElementById("materialType").value;
+      const dueDateContainer = document.getElementById("dueDateContainer");
+      
+      if (materialType === "assignment") {
+        dueDateContainer.style.display = "block";
+      } else {
+        dueDateContainer.style.display = "none";
+      }
+    }
+    
+    // Filter assignments by course
+    function filterAssignmentsByCourse() {
+      const selectedCourse = document.getElementById("courseSelect").value;
+      const fileItems = document.querySelectorAll(".file-list-item");
+      
+      fileItems.forEach(item => {
+        if (selectedCourse === "all" || item.dataset.course === selectedCourse) {
+          item.style.display = "flex";
+        } else {
+          item.style.display = "none";  
+        }
+      });
+    }
+    
+    // Handle tab switching
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabContents = document.querySelectorAll(".tab-content");
+    
+    tabButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        // Remove active class from all buttons
+        tabButtons.forEach(btn => btn.classList.remove("active"));
+        
+        // Add active class to clicked button
+        button.classList.add("active");
+        
+        // Hide all tab contents
+        tabContents.forEach(content => content.classList.remove("active"));
+        
+        // Show selected tab content
+        const tabId = button.dataset.tab;
+        if (tabId === "all") {
+          document.getElementById("allMaterials").classList.add("active");
+        } else if (tabId === "assignments") {
+          document.getElementById("assignmentsTab").classList.add("active");
+          // Filter and clone assignment items to this tab
+          filterAndPopulateTab("assignment", "assignmentsTab");
+        } else if (tabId === "presentations") {
+          document.getElementById("presentationsTab").classList.add("active");
+          // Filter and clone presentation items to this tab
+          filterAndPopulateTab("ppt", "presentationsTab");
+        } else if (tabId === "pdfs") {
+          document.getElementById("pdfsTab").classList.add("active");
+          // Filter and clone PDF items to this tab
+          filterAndPopulateTab("pdf", "pdfsTab");
+        }
+      });
+    });
+    
+    // Filter and populate tab content
+    function filterAndPopulateTab(type, tabId) {
+      const tabContent = document.getElementById(tabId);
+      tabContent.innerHTML = "";
+      
+      const fileItems = document.querySelectorAll(`.file-list-item[data-type="${type}"]`);
+      const selectedCourse = document.getElementById("courseSelect").value;
+      
+      fileItems.forEach(item => {
+        if (selectedCourse === "all" || item.dataset.course === selectedCourse) {
+          const clone = item.cloneNode(true);
+          tabContent.appendChild(clone);
+        }
+      });
+      
+      if (tabContent.children.length === 0) {
+        tabContent.innerHTML = `<p class="text-center text-gray-400 py-4">No ${type} materials found</p>`;
+      }
+    }
+    
+    // Function to handle form submission
+    document.getElementById("assignmentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      // Get form values
+      const materialType = document.getElementById("materialType").value;
+      const name = document.getElementById("assignmentName").value;
+      const course = document.getElementById("courseName").value;
+      const courseText = document.getElementById("courseName").options[document.getElementById("courseName").selectedIndex].text;
+      const description = document.getElementById("fileDescription").value;
+      const file = document.getElementById("fileUpload").files[0];
+      
+      // Create new material item
+      const newItem = document.createElement("div");
+      newItem.className = "file-list-item";
+      newItem.dataset.course = course;
+      newItem.dataset.type = materialType;
+      
+      // Set icon and badge based on material type
+      let icon, badgeClass, badgeText;
+      switch(materialType) {
+        case "assignment":
+          icon = "As";
+          badgeClass = "badge-assignment";
+          badgeText = "Assignment";
+          break;
+        case "ppt":
+          icon = "PPT";
+          badgeClass = "badge-ppt";
+          badgeText = "PPT";
+          break;
+        case "pdf":
+          icon = "PDF";
+          badgeClass = "badge-pdf";
+          badgeText = "PDF";
+          break;
+      }
+      
+      // Get date information
+      let dateInfo;
+      if (materialType === "assignment") {
+        const dueDate = document.getElementById("dueDate").value;
+        const formattedDate = new Date(dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        dateInfo = `Due: ${formattedDate}`;
+      } else {
+        const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        dateInfo = `Uploaded: ${today}`;
+      }
+      
+      // Create the HTML structure
+      newItem.innerHTML = `
+        <div class="flex items-center">
+          <div class="file-icon bg-${materialType === "assignment" ? "green" : materialType === "pdf" ? "red" : "yellow"}-600 text-white">${icon}</div>
+          <div>
+            <div class="file-name">${name}</div>
+            <div class="text-xs text-gray-400">${courseText.split(":")[0]} • ${dateInfo}</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="badge ${badgeClass}">${badgeText}</span>
+          <button class="text-indigo-400 hover:text-indigo-300" onclick="editAssignment(this)">Edit</button>
+          <button class="text-red-400 hover:text-red-300" onclick="deleteAssignment(this)">Delete</button>
+        </div>
+      `;
+      
+      // Add to the list
+      document.getElementById("fileList").prepend(newItem);
+      
+      // Show notification
+      showNotification(`Successfully added ${materialType}: ${name}`);
+      
+      // Close modal
+      closeNewAssignmentModal();
+    });
+    
+    // Function to edit assignment
+    function editAssignment(button) {
+      const item = button.closest(".file-list-item");
+      const name = item.querySelector(".file-name").textContent;
+      
+      // This would typically open the edit modal with pre-filled values
+      alert(`Edit ${name} - This functionality would be implemented in a real system`);
+    }
+    
+    // Function to delete assignment
+    function deleteAssignment(button) {
+      const item = button.closest(".file-list-item");
+      const name = item.querySelector(".file-name").textContent;
+      
+      if (confirm(`Are you sure you want to delete "${name}"?`)) {
+        item.remove();
+        showNotification(`Deleted: ${name}`);
+      }
+    }
+    
+    // Function to show notification
+    function showNotification(message) {
+      const notification = document.createElement("div");
+      notification.className = "fixed bottom-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded shadow-lg";
+      notification.textContent = message;
+      
+      document.getElementById("notificationArea").appendChild(notification);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+    
+    // Initialize
+    toggleDueDateField();
+  </script>
+</body>
+</html>

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solo Leveling | Student Dashboard</title>
+
+  <!-- ✅ Google Font: Bodoni Moda -->
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Bodoni Moda', serif;
+      background-image: url('Login_page_bg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      backdrop-filter: blur(2px);
+      overflow-x: hidden;
+    }
+
+    .glass {
+      background: rgba(10, 10, 20, 0.85);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .glow-text {
+      text-shadow: 0 0 8px #818cf8;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 9999px;
+      border: 2px solid #818cf8;
+      box-shadow: 0 0 15px #6366f1;
+    }
+    
+    .xp-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(99, 102, 241, 0.8);
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(129, 140, 248, 0.5);
+      animation: fadeOut 2s forwards;
+      animation-delay: 1s;
+    }
+    
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    
+    /* Rank up popup styling */
+    .rank-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn 0.5s forwards;
+    }
+    
+    .rank-popup {
+      width: 90%;
+      max-width: 600px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(17, 24, 39, 0.95));
+      border: 2px solid #6366f1;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.8);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .rank-popup::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+      animation: pulseGlow 3s infinite;
+    }
+    
+    .rank-popup-content {
+      position: relative;
+      z-index: 10;
+    }
+    
+    .rank-title {
+      font-size: 36px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      text-shadow: 0 0 15px #818cf8;
+      animation: pulseText 2s infinite;
+    }
+    
+    .avatar-comparison {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 30px 0;
+    }
+    
+    .avatar-container {
+      text-align: center;
+    }
+    
+    .avatar-large {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #818cf8;
+      box-shadow: 0 0 20px #6366f1;
+    }
+    
+    .rank-arrow {
+      font-size: 40px;
+      color: #818cf8;
+      animation: arrowPulse 1.5s infinite;
+    }
+    
+    .close-button {
+      background: rgba(99, 102, 241, 0.8);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-size: 18px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .close-button:hover {
+      background: rgba(129, 140, 248, 0.9);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.8);
+    }
+    
+    .sparkle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px 2px #6366f1;
+      z-index: 5;
+      opacity: 0;
+    }
+    
+    /* Debug overlay */
+    .debug-overlay {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes pulseGlow {
+      0% { opacity: 0.3; }
+      50% { opacity: 0.7; }
+      100% { opacity: 0.3; }
+    }
+    
+    @keyframes pulseText {
+      0% { text-shadow: 0 0 10px #818cf8; }
+      50% { text-shadow: 0 0 20px #818cf8, 0 0 30px #6366f1; }
+      100% { text-shadow: 0 0 10px #818cf8; }
+    }
+    
+    @keyframes arrowPulse {
+      0% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.7; }
+    }
+    
+    @keyframes sparkle {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-64 p-6 glass hidden md:block">
+    <h2 class="text-2xl font-bold glow-text mb-8">Student Panel</h2>
+    <nav class="space-y-4">
+      <a href="#" class="block py-2 px-4 rounded hover:bg-indigo-600 bg-indigo-500">Dashboard</a>
+      <a href="#" class="block py-2 px-4 rounded hover:bg-indigo-600">My Tasks</a>
+      <a href="#" class="block py-2 px-4 rounded hover:bg-indigo-600">XP & Progress</a>
+      <a href="Leaderboard.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Leaderboard</a>
+      <a href="#" class="block py-2 px-4 rounded hover:bg-indigo-600">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <!-- Top bar -->
+    <div class="glass rounded-xl p-4 mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold glow-text">Welcome, Hunter Student</h1>
+        <p id="rankText" class="text-indigo-300 text-sm">Rank: E</p>
+      </div>
+      <div class="flex items-center space-x-4">
+        <img id="avatarImage" src="L1_Avatar.png" alt="Avatar" class="avatar">
+        <a href="Login 3.html" class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600 inline-block">Logout</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">XP</h3>
+        <p id="xpValue" class="text-3xl font-bold text-indigo-400">0</p>
+      </div>
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">Level</h3>
+        <p id="levelValue" class="text-3xl font-bold text-indigo-400">Lv. 1</p>
+      </div>
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">Tasks Completed</h3>
+        <p id="tasksCompleted" class="text-3xl font-bold text-indigo-400">0</p>
+      </div>
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">XP Tracker</h3>
+        <div class="w-full bg-gray-700 rounded-full h-4 mt-2">
+          <div id="xpProgress" class="bg-indigo-500 h-4 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasks Preview -->
+    <div class="glass rounded-xl p-6">
+      <h2 class="text-2xl font-bold glow-text mb-4">Recent Tasks</h2>
+      <ul id="taskList" class="space-y-3"></ul>
+    </div>
+    
+    <!-- Quick XP Gain Buttons (for testing) -->
+    <div class="mt-6 flex flex-wrap gap-4">
+      <button id="gainXpButton" class="bg-indigo-500 px-6 py-3 rounded-lg hover:bg-indigo-600 transition">
+        Gain 100 XP (Test)
+      </button>
+      <button id="gainLargeXpButton" class="bg-indigo-600 px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
+        Gain 1000 XP (Test)
+      </button>
+      <div class="flex gap-1">
+        <button id="rankUpButton" class="bg-purple-500 px-6 py-3 rounded-lg hover:bg-purple-600 transition">
+          Next Rank (Test)
+        </button>
+        <div class="bg-purple-600 px-3 py-3 rounded-lg">
+          <select id="rankSelect" class="bg-purple-700 text-white px-2 py-1 rounded">
+            <option value="0">E Rank</option>
+            <option value="1">D Rank</option>
+            <option value="2">C Rank</option>
+            <option value="3">B Rank</option>
+            <option value="4">A Rank</option>
+            <option value="5">S Rank</option>
+            <option value="6">EX Rank</option>
+          </select>
+        </div>
+      </div>
+      <button id="toggleDebugButton" class="bg-gray-600 px-6 py-3 rounded-lg hover:bg-gray-700 transition">
+        Toggle Debug Info
+      </button>
+    </div>
+  </main>
+
+  <div id="notificationArea"></div>
+  <div id="debugOverlay" class="debug-overlay" style="display: none;"></div>
+
+  <script>
+    // Initialize variables
+    let xp = 0;
+    let level = 1;
+    let tasksCompleted = 0;
+    let previousRank = 'E';
+    let previousAvatar = 'L1_Avatar.png';
+    let debugMode = false;
+    
+    // Define avatar and rank data
+    const avatarImages = [
+      'L1_Avatar.png',  // E Rank
+      'D_avatar.png',   // D Rank
+      'C_avatar.png',    // C Rank
+      'B_avatar.png',    // B Rank
+      'A_avatar.png',    // A Rank
+      'S_avatar.png',    // S Rank
+      'EX_avatar.jpg'     // EX Rank
+    ];
+
+    const ranks = ['E', 'D', 'C', 'B', 'A', 'S', 'EX'];
+    
+    // Calculate XP needed for next level (increases with each level)
+    function xpForNextLevel() {
+      return level * 500;
+    }
+    
+    // Update the XP UI elements
+    function updateXpUI() {
+      document.getElementById("xpValue").innerText = xp;
+      document.getElementById("levelValue").innerText = `Lv. ${level}`;
+      document.getElementById("tasksCompleted").innerText = tasksCompleted;
+      
+      // Calculate and update progress bar
+      const nextLevelXp = xpForNextLevel();
+      const progress = (xp / nextLevelXp) * 100;
+      document.getElementById("xpProgress").style.width = `${progress}%`;
+      
+      // Update debug overlay if active
+      if (debugMode) {
+        updateDebugOverlay();
+      }
+    }
+    
+    // Update debug overlay with current state information
+    function updateDebugOverlay() {
+      const debugElement = document.getElementById("debugOverlay");
+      const rankIndex = Math.min(Math.floor((level - 1) / 10), ranks.length - 1);
+      
+      debugElement.innerHTML = `
+        <div><strong>Debug Info:</strong></div>
+        <div>XP: ${xp}</div>
+        <div>Level: ${level}</div>
+        <div>Level % 10: ${level % 10}</div>
+        <div>Level Rank Index: ${Math.floor((level - 1) / 10)}</div>
+        <div>Capped Rank Index: ${rankIndex}</div>
+        <div>Current Rank: ${ranks[rankIndex]}</div>
+        <div>Current Avatar: ${avatarImages[rankIndex]}</div>
+        <div>Tasks Completed: ${tasksCompleted}</div>
+        <div>XP for Next Level: ${xpForNextLevel()}</div>
+      `;
+    }
+    
+    // Function to gain XP
+    function gainXP(amount, source) {
+      xp += amount;
+      let didLevelUp = false;
+      let oldRankIndex = Math.min(Math.floor((level - 1) / 10), ranks.length - 1);
+      
+      // Check if level up (possibly multiple levels)
+      while (xp >= xpForNextLevel()) {
+        // Store previous rank and avatar before leveling up
+        previousRank = ranks[oldRankIndex];
+        previousAvatar = avatarImages[oldRankIndex];
+        
+        // Level up
+        xp -= xpForNextLevel();
+        level++;
+        didLevelUp = true;
+        
+        showNotification(`Level Up! You are now level ${level}`);
+      }
+      
+      // If we leveled up, check if rank changed
+      if (didLevelUp) {
+        const newRankIndex = Math.min(Math.floor((level - 1) / 10), ranks.length - 1);
+        
+        // Check if rank changed
+        if (newRankIndex > oldRankIndex) {
+          updateAvatarAndRank(true); // Show rank up popup
+        } else {
+          updateAvatarAndRank(false); // Just update the UI
+        }
+      }
+      
+      if (source === 'Task Completion') {
+        tasksCompleted++;
+      }
+      
+      // Show XP gain notification
+      showNotification(`+${amount} XP from ${source}`);
+      
+      // Update UI
+      updateXpUI();
+      
+      // Add to task list for record
+      addTaskToList(source, amount);
+    }
+    
+    // Add task to the list
+    function addTaskToList(taskName, xpAmount) {
+      const taskList = document.getElementById("taskList");
+      const taskItem = document.createElement("li");
+      taskItem.className = "p-3 card rounded-lg flex justify-between items-center";
+      
+      // Get current time
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      taskItem.innerHTML = `
+        <div>
+          <h4 class="font-semibold">${taskName}</h4>
+          <p class="text-xs text-gray-400">${timeString}</p>
+        </div>
+        <span class="bg-indigo-600 px-2 py-1 rounded text-sm">+${xpAmount} XP</span>
+      `;
+      
+      // Add to beginning of list
+      taskList.insertBefore(taskItem, taskList.firstChild);
+      
+      // Limit list to 5 items
+      if (taskList.children.length > 5) {
+        taskList.removeChild(taskList.lastChild);
+      }
+    }
+    
+    // Show notification
+    function showNotification(message) {
+      const notificationArea = document.getElementById("notificationArea");
+      const notification = document.createElement("div");
+      notification.className = "xp-notification";
+      notification.textContent = message;
+      
+      notificationArea.appendChild(notification);
+      
+      // Remove notification after animation completes
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+    
+    // Automatically gain XP every second
+    function autoGainXP() {
+      setInterval(() => {
+        gainXP(10, 'Auto XP Gain');
+      }, 5000); // Every 5 seconds for slower gain
+    }
+    
+    // Update avatar and rank based on level
+    function updateAvatarAndRank(showPopup = false) {
+      // Calculate correct rank index based on level
+      // Level 1-9: E rank (index 0)
+      // Level 10-19: D rank (index 1)
+      // Level 20-29: C rank (index 2), etc.
+      const newRankIndex = Math.min(Math.floor((level - 1) / 10), ranks.length - 1);
+      const newRank = ranks[newRankIndex];
+      const newAvatar = avatarImages[newRankIndex];
+      
+      if (debugMode) {
+        console.log(`Updating rank: Level ${level}, Rank Index ${newRankIndex}, Rank ${newRank}`);
+      }
+      
+      // Update UI
+      document.getElementById("avatarImage").src = newAvatar;
+      document.getElementById("rankText").innerText = `Rank: ${newRank}`;
+      
+      // Show rank up popup if requested and it's an actual rank change
+      if (showPopup && previousRank !== newRank) {
+        showRankUpPopup(previousRank, newRank, previousAvatar, newAvatar);
+      }
+      
+      // Update rank selector in testing UI to match current rank
+      document.getElementById("rankSelect").value = newRankIndex;
+    }
+    
+    // Show rank up popup with animation
+    function showRankUpPopup(oldRank, newRank, oldAvatar, newAvatar) {
+      if (debugMode) {
+        console.log(`Showing rank up popup: ${oldRank} -> ${newRank}, ${oldAvatar} -> ${newAvatar}`);
+      }
+      
+      // Create popup overlay
+      const overlay = document.createElement("div");
+      overlay.className = "rank-popup-overlay";
+      
+      // Create popup content
+      overlay.innerHTML = `
+        <div class="rank-popup">
+          <div class="rank-popup-content">
+            <h2 class="rank-title">Rank Up!</h2>
+            <p class="text-2xl mb-4">Congratulations! You've achieved a new rank!</p>
+            
+            <div class="avatar-comparison">
+              <div class="avatar-container">
+                <img src="${oldAvatar}" class="avatar-large" alt="Old Avatar">
+                <p class="mt-2 text-lg">Rank ${oldRank}</p>
+              </div>
+              
+              <div class="rank-arrow">→</div>
+              
+              <div class="avatar-container">
+                <img src="${newAvatar}" class="avatar-large" alt="New Avatar">
+                <p class="mt-2 text-lg">Rank ${newRank}</p>
+              </div>
+            </div>
+            
+            <p class="text-lg mb-6">Your strength and abilities have increased!</p>
+            
+            <button class="close-button">Continue</button>
+          </div>
+        </div>
+      `;
+      
+      // Add to document
+      document.body.appendChild(overlay);
+      
+      // Add sparkle animations
+      createSparkles(overlay);
+      
+      // Add click event to close button
+      overlay.querySelector('.close-button').addEventListener('click', () => {
+        overlay.style.animation = 'fadeOut 0.5s forwards';
+        setTimeout(() => {
+          overlay.remove();
+        }, 500);
+      });
+    }
+    
+    // Create sparkle effect animations
+    function createSparkles(container) {
+      const popupElement = container.querySelector('.rank-popup');
+      const popupRect = popupElement.getBoundingClientRect();
+      
+      // Create 30 sparkles
+      for (let i = 0; i < 30; i++) {
+        setTimeout(() => {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle';
+          
+          // Random position around the popup
+          const x = Math.random() * popupRect.width;
+          const y = Math.random() * popupRect.height;
+          
+          sparkle.style.left = `${x}px`;
+          sparkle.style.top = `${y}px`;
+          
+          // Random size
+          const size = Math.random() * 5 + 5;
+          sparkle.style.width = `${size}px`;
+          sparkle.style.height = `${size}px`;
+          
+          // Random color
+          const colors = ['#fff', '#6366f1', '#818cf8', '#c4b5fd'];
+          sparkle.style.background = colors[Math.floor(Math.random() * colors.length)];
+          
+          // Random animation duration
+          const duration = Math.random() * 2 + 1;
+          sparkle.style.animation = `sparkle ${duration}s forwards`;
+          
+          popupElement.appendChild(sparkle);
+          
+          // Remove sparkle after animation
+          setTimeout(() => {
+            sparkle.remove();
+          }, duration * 1000);
+        }, i * 100); // Stagger the creation of sparkles
+      }
+    }
+    
+    // Force rank up for testing
+    function forceRankUpToNext() {
+      // Get current rank index
+      const currentRankIndex = Math.min(Math.floor((level - 1) / 10), ranks.length - 1);
+      
+      // Only proceed if we can rank up further
+      if (currentRankIndex < ranks.length - 1) {
+        // Store previous rank and avatar
+        previousRank = ranks[currentRankIndex];
+        previousAvatar = avatarImages[currentRankIndex];
+        
+        // Set level to next rank threshold
+        const nextRankLevel = (currentRankIndex + 1) * 10 + 1;
+        level = nextRankLevel;
+        
+        // Update UI
+        updateXpUI();
+        updateAvatarAndRank(true); // Show popup
+      } else {
+        showNotification("You've already reached the maximum rank!");
+      }
+    }
+    
+    // Force a specific rank
+    function forceSpecificRank(rankIndex) {
+      if (rankIndex >= 0 && rankIndex < ranks.length) {
+        // Store previous state
+        const currentRankIndex = Math.min(Math.floor((level - 1) / 10), ranks.length - 1);
+        previousRank = ranks[currentRankIndex];
+        previousAvatar = avatarImages[currentRankIndex];
+        
+        // Set new level based on rank
+        level = rankIndex * 10 + 1;
+        
+        // Update UI
+        updateXpUI();
+        updateAvatarAndRank(true); // Show popup
+      }
+    }
+    
+    // Toggle debug overlay
+    function toggleDebugOverlay() {
+      debugMode = !debugMode;
+      const debugElement = document.getElementById("debugOverlay");
+      
+      if (debugMode) {
+        debugElement.style.display = "block";
+        updateDebugOverlay();
+      } else {
+        debugElement.style.display = "none";
+      }
+    }
+    
+    // Add event listeners
+    document.getElementById("gainXpButton").addEventListener("click", function() {
+      gainXP(100, 'Task Completion');
+    });
+    
+    document.getElementById("gainLargeXpButton").addEventListener("click", function() {
+      gainXP(1000, 'Major Task Completion');
+    });
+    
+    document.getElementById("rankUpButton").addEventListener("click", function() {
+      forceRankUpToNext();
+    });
+    
+    document.getElementById("rankSelect").addEventListener("change", function() {
+      forceSpecificRank(parseInt(this.value));
+    });
+    
+    document.getElementById("toggleDebugButton").addEventListener("click", function() {
+      toggleDebugOverlay();
+    });
+    
+    // Initialize UI
+    updateXpUI();
+    
+    // Start auto XP gain
+    autoGainXP();
+  </script>
+</body>
+</html>

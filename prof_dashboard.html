@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Professor Dashboard</title>
+
+  <!-- ✅ Google Font: Bodoni Moda -->
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Bodoni Moda', serif;
+      background-image: url('Login_page_bg.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      backdrop-filter: blur(2px);
+      overflow-x: hidden;
+    }
+
+    .glass {
+      background: rgba(10, 10, 20, 0.85);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .glow-text {
+      text-shadow: 0 0 8px #818cf8;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 9999px;
+      border: 2px solid #818cf8;
+      box-shadow: 0 0 15px #6366f1;
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .modal-content {
+      background: rgba(30, 41, 59, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+    }
+
+    .close-modal {
+      background: rgba(99, 102, 241, 0.8);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .close-modal:hover {
+      background: rgba(129, 140, 248, 0.9);
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-64 p-6 glass hidden md:block">
+    <h2 class="text-2xl font-bold glow-text mb-8">Professor Panel</h2>
+    <nav class="space-y-4">
+      <a href="prof_dashboard.html" class="block py-2 px-4 rounded hover:bg-indigo-600 bg-indigo-500">Dashboard</a>
+      <a href="manage_course.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Manage Courses</a>
+      <a href="student_progress.html" class="block py-2 px-4 rounded hover:bg-indigo-600">View Student Progress</a>
+      <a href="assignments.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Assignments</a>
+      <a href="settings.html" class="block py-2 px-4 rounded hover:bg-indigo-600" onclick="showSettings()">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <!-- Top bar -->
+    <div class="glass rounded-xl p-4 mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold glow-text">Welcome, Professor</h1>
+        <p id="rankText" class="text-indigo-300 text-sm">Department: Computer Science</p>
+      </div>
+      <div class="flex items-center space-x-4">
+        <img id="avatarImage" src="prof_img.png" alt="Avatar" class="avatar">
+        <a href="Login 3.html" class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600 inline-block">Logout</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">Total Courses</h3>
+        <p id="totalCourses" class="text-3xl font-bold text-indigo-400">5</p>
+      </div>
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">Total Students</h3>
+        <p id="totalStudents" class="text-3xl font-bold text-indigo-400">120</p>
+      </div>
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">Pending Assignments</h3>
+        <p id="pendingAssignments" class="text-3xl font-bold text-indigo-400">3</p>
+      </div>
+      <div class="card p-6 rounded-xl">
+        <h3 class="text-xl font-semibold">Average Student Grade</h3>
+        <p id="averageGrade" class="text-3xl font-bold text-indigo-400">B+</p>
+      </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="glass rounded-xl p-6">
+      <h2 class="text-2xl font-bold glow-text mb-4">Recent Activities</h2>
+      <ul id="activityList" class="space-y-3"></ul>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="mt-6 flex flex-wrap gap-4">
+      <button id="sendMessageButton" class="bg-purple-500 px-6 py-3 rounded-lg hover:bg-purple-600 transition">
+        Send Message to Students
+      </button>
+    </div>
+  </main>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-2xl font-bold glow-text mb-4">Settings</h2>
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-lg">Sound Effects:</span>
+        <input type="checkbox" id="soundToggle" class="toggle-checkbox" />
+      </div>
+      <button class="close-modal mt-4" onclick="closeSettings()">Close</button>
+    </div>
+  </div>
+
+  <div id="notificationArea"></div>
+  <div id="debugOverlay" class="debug-overlay" style="display: none;"></div>
+
+  <script>
+    // Function to show the settings modal
+    function showSettings() {
+      const modal = document.getElementById("settingsModal");
+      modal.classList.add("show");
+    }
+
+    // Function to close the settings modal
+    function closeSettings() {
+      const modal = document.getElementById("settingsModal");
+      modal.classList.remove("show");
+    }
+
+    // Example function to add recent activities
+    function addActivity(activity) {
+      const activityList = document.getElementById("activityList");
+      const activityItem = document.createElement("li");
+      activityItem.className = "p-3 card rounded-lg";
+      activityItem.innerText = activity;
+      activityList.appendChild(activityItem);
+    }
+
+    // Example of adding some activities
+    addActivity("Reviewed assignment submissions.");
+    addActivity("Updated course syllabus.");
+    addActivity("Scheduled a meeting with students.");
+  </script>
+</body>
+</html>

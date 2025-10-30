@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solo Leveling | My Tasks</title>
+
+  <!-- ✅ Google Font: Bodoni Moda -->
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Bodoni Moda', serif;
+      background-image: url('Login_page_bg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      backdrop-filter: blur(2px);
+      overflow-x: hidden;
+    }
+
+    .glass {
+      background: rgba(10, 10, 20, 0.85);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .glow-text {
+      text-shadow: 0 0 8px #818cf8;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 9999px;
+      border: 2px solid #818cf8;
+      box-shadow: 0 0 15px #6366f1;
+    }
+
+    .task-section {
+      display: none; /* Initially hidden */
+    }
+  </style>
+</head>
+
+<body class="text-white min-h-screen flex">
+  <!-- Sidebar -->
+  <aside class="w-64 p-6 glass hidden md:block">
+    <h2 class="text-2xl font-bold glow-text mb-8">Student Panel</h2>
+    <nav class="space-y-4">
+      <a href="Stdt_dash.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Dashboard</a>
+      <a href="my_tasks.html" class="block py-2 px-4 rounded hover:bg-indigo-600 bg-indigo-500">My Tasks</a>
+      <a href="xp_and_progress.html" class="block py-2 px-4 rounded hover:bg-indigo-600">XP & Progress</a>
+      <a href="Leaderboard.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Leaderboard</a>
+      <a href="settings_stdt.html" class="block py-2 px-4 rounded hover:bg-indigo-600">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <!-- Top bar -->
+    <div class="glass rounded-xl p-4 mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold glow-text">My Tasks</h1>
+      </div>
+    </div>
+
+    <!-- Assigned Tasks Section -->
+    <div class="mb-6">
+      <h2 class="text-xl font-bold glow-text mb-4 cursor-pointer" onclick="toggleSection('assignedTasksSection')">
+        Assigned Tasks <span id="assignedTasksCount" class="text-indigo-400">(0)</span>
+      </h2>
+      <div id="assignedTasksSection" class="task-section space-y-4"></div>
+    </div>
+
+    <!-- Completed Tasks Section -->
+    <div class="mb-6">
+      <h2 class="text-xl font-bold glow-text mb-4 cursor-pointer" onclick="toggleSection('completedTasksSection')">
+        Completed Tasks <span id="completedTasksCount" class="text-indigo-400">(0)</span>
+      </h2>
+      <div id="completedTasksSection" class="task-section space-y-4"></div>
+    </div>
+
+    <!-- Missed Tasks Section -->
+    <div class="mb-6">
+      <h2 class="text-xl font-bold glow-text mb-4 cursor-pointer" onclick="toggleSection('missedTasksSection')">
+        Missed Tasks <span id="missedTasksCount" class="text-indigo-400">(0)</span>
+      </h2>
+      <div id="missedTasksSection" class="task-section space-y-4"></div>
+    </div>
+  </main>
+
+  <script>
+    let assignedTasks = [];
+    let completedTasks = [];
+    let missedTasks = [];
+
+    // Function to toggle the visibility of task sections
+    function toggleSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Function to add a new task (for demonstration purposes)
+    function addTask(name, description, timeLimit) {
+      const taskItem = createTaskItem(name, description, timeLimit);
+      assignedTasks.push({ name, description, timeLimit, timer: setTimeout(() => markAsMissed(name), timeLimit) });
+      document.getElementById("assignedTasksSection").appendChild(taskItem);
+      updateTaskCounts();
+    }
+
+    // Function to create a task item
+    function createTaskItem(name, description, timeLimit) {
+      const dueDate = new Date(Date.now() + timeLimit).toLocaleString(); // Calculate due date
+      const taskListItem = document.createElement("div");
+      taskListItem.className = "card p-4 rounded-lg flex justify-between items-center";
+
+      taskListItem.innerHTML = `
+        <div>
+          <h3 class="text-xl font-semibold">${name}</h3>
+          <p class="text-gray-400">${description}</p>
+          <p class="text-gray-500">Due: ${dueDate}</p>
+          <input type="file" accept=".ppt,.pptx,.pdf,.doc,.docx,.jpg,.jpeg,.png" class="mt-2" onchange="submitTask(this, '${name}')">
+        </div>
+        <div>
+          <button class="bg-indigo-500 px-4 py-2 rounded hover:bg-indigo-600" onclick="completeTask(this)">Submit</button>
+        </div>
+      `;
+
+      return taskListItem;
+    }
+
+    // Function to submit a task
+    function submitTask(input, taskName) {
+      const file = input.files[0];
+      if (file) {
+        // Remove the task from assigned tasks
+        const taskIndex = assignedTasks.findIndex(task => task.name === taskName);
+        if (taskIndex !== -1) {
+          clearTimeout(assignedTasks[taskIndex].timer); // Clear the timer
+          assignedTasks.splice(taskIndex, 1); // Remove the task from assigned tasks
+        }
+
+        // Add to completed tasks
+        completedTasks.push({ name: taskName, description: "Submitted with file: " + file.name });
+        const completedTaskItem = createCompletedTaskItem(taskName, "Submitted with file: " + file.name);
+        document.getElementById("completedTasksSection").appendChild(completedTaskItem);
+        updateTaskCounts();
+      }
+    }
+
+    // Function to create a completed task item
+    function createCompletedTaskItem(name, description) {
+      const taskListItem = document.createElement("div");
+      taskListItem.className = "card p-4 rounded-lg flex justify-between items-center";
+
+      taskListItem.innerHTML = `
+        <div>
+          <h3 class="text-xl font-semibold">${name}</h3>
+          <p class="text-gray-400">${description}</p>
+        </div>
+        <div>
+          <button class="bg-yellow-500 px-4 py-2 rounded hover:bg-yellow-600" onclick="unsubmitTask(this, '${name}')">Unsubmit</button>
+        </div>
+      `;
+
+      return taskListItem;
+    }
+
+    // Function to mark a task as completed
+    function completeTask(button) {
+      const taskItem = button.parentElement.parentElement;
+      const taskName = taskItem.querySelector("h3").innerText;
+      const taskDescription = taskItem.querySelector("p").innerText;
+
+      // Remove from assigned tasks
+      assignedTasks = assignedTasks.filter(task => task.name !== taskName);
+      taskItem.remove();
+
+      // Add to completed tasks
+      completedTasks.push({ name: taskName, description: taskDescription });
+      const completedTaskItem = createCompletedTaskItem(taskName, taskDescription);
+      document.getElementById("completedTasksSection").appendChild(completedTaskItem);
+      updateTaskCounts();
+    }
+
+    // Function to mark a task as missed
+    function markAsMissed(taskName) {
+      // Find the task in assigned tasks
+      const task = assignedTasks.find(task => task.name === taskName);
+      if (task) {
+        // Remove from assigned tasks
+        assignedTasks = assignedTasks.filter(t => t.name !== taskName);
+
+        // Add to missed tasks
+        missedTasks.push({ name: taskName, description: "Missed deadline" });
+        const missedTaskItem = createTaskItem(taskName, "Missed deadline", 0);
+        document.getElementById("missedTasksSection").appendChild(missedTaskItem);
+        updateTaskCounts();
+      }
+    }
+
+    // Function to unsubmit a task
+    function unsubmitTask(button, taskName) {
+      const taskItem = button.parentElement.parentElement;
+      const taskDescription = taskItem.querySelector("p").innerText;
+
+      // Remove from completed tasks
+      completedTasks = completedTasks.filter(task => task.name !== taskName);
+      taskItem.remove();
+
+      // Add back to assigned tasks
+      const newTaskItem = createTaskItem(taskName, taskDescription, 30000); // Set a new time limit (30 seconds)
+      assignedTasks.push({ name: taskName, description: taskDescription, timeLimit: 30000, timer: setTimeout(() => markAsMissed(taskName), 30000) });
+      document.getElementById("assignedTasksSection").appendChild(newTaskItem);
+      updateTaskCounts();
+    }
+
+    // Function to update task counts
+    function updateTaskCounts() {
+      document.getElementById("assignedTasksCount").innerText = `(${assignedTasks.length})`;
+      document.getElementById("completedTasksCount").innerText = `(${completedTasks.length})`;
+      document.getElementById("missedTasksCount").innerText = `(${missedTasks.length})`;
+    }
+
+    // Example tasks for demonstration
+    addTask("Task 1", "Description of Task 1.", 10000); // 10 seconds
+    addTask("Task 2", "Description of Task 2.", 20000); // 20 seconds
+    addTask("Task 3", "Description of Task 3.", 30000); // 30 seconds
+  </script>
+</body>
+</html>
